@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2, LogIn } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -40,7 +40,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-black relative overflow-hidden">
       
-      {/* Background Ambience (Consistent with Signup) */}
+      {/* Background Ambience */}
       <div className="absolute inset-0 z-0">
         <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-900/20 rounded-full blur-[120px]" />
         <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-purple-900/20 rounded-full blur-[120px]" />
@@ -58,27 +58,19 @@ export default function LoginPage() {
           transition={{ duration: 0.5 }}
           className="bg-zinc-900/80 backdrop-blur-xl border border-white/10 p-8 sm:p-10 rounded-3xl shadow-2xl"
         >
-          <div className="text-center mb-8">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", stiffness: 200, delay: 0.1 }}
-              className="w-16 h-16 bg-gradient-to-tr from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-blue-500/20"
-            >
-              <LogIn className="w-8 h-8 text-white" />
-            </motion.div>
+          <div className="text-center mb-10">
             <motion.h2 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
-              className="text-3xl font-black text-white tracking-tighter uppercase"
+              className="text-4xl font-black text-white tracking-tighter uppercase"
             >
               Welcome <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">Back</span>
             </motion.h2>
-            <p className="mt-2 text-gray-400 text-sm">Sign in to access your locker</p>
+            <p className="mt-3 text-gray-400 text-sm font-medium">Sign in to access your locker</p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-5">
+          <form onSubmit={handleLogin} className="space-y-6">
             {/* ERROR MESSAGE */}
             <AnimatePresence>
               {error && (
@@ -96,14 +88,14 @@ export default function LoginPage() {
 
             {/* EMAIL INPUT */}
             <div className="group space-y-2">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider ml-1">Email</label>
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Email</label>
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-blue-400 transition-colors" />
                 <input
                   type="email"
                   required
                   placeholder="you@example.com"
-                  className="w-full bg-black/40 border border-white/10 rounded-xl px-12 py-3.5 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 transition-all duration-300"
+                  className="w-full bg-black/40 border border-white/10 rounded-xl px-12 py-4 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 transition-all duration-300 font-medium"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
@@ -113,8 +105,8 @@ export default function LoginPage() {
             {/* PASSWORD INPUT */}
             <div className="group space-y-2">
               <div className="flex justify-between items-center ml-1">
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Password</label>
-                <Link href="#" className="text-xs text-blue-400 hover:text-blue-300 transition-colors">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Password</label>
+                <Link href="#" className="text-xs font-bold text-blue-500 hover:text-blue-400 transition-colors">
                   Forgot?
                 </Link>
               </div>
@@ -124,7 +116,7 @@ export default function LoginPage() {
                   type={showPassword ? "text" : "password"}
                   required
                   placeholder="••••••••"
-                  className="w-full bg-black/40 border border-white/10 rounded-xl px-12 py-3.5 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500/50 focus:ring-4 focus:ring-purple-500/10 transition-all duration-300"
+                  className="w-full bg-black/40 border border-white/10 rounded-xl px-12 py-4 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500/50 focus:ring-4 focus:ring-purple-500/10 transition-all duration-300 font-medium"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
@@ -143,7 +135,7 @@ export default function LoginPage() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               disabled={loading}
-              className="w-full relative overflow-hidden group bg-white text-black font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-gray-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-4"
+              className="w-full relative overflow-hidden group bg-white text-black font-black uppercase tracking-widest py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-gray-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-6"
             >
               <span className="relative z-10 flex items-center gap-2">
                 {loading ? (
@@ -163,10 +155,10 @@ export default function LoginPage() {
           </form>
 
           {/* FOOTER */}
-          <div className="mt-8 text-center">
+          <div className="mt-8 text-center border-t border-white/5 pt-6">
             <p className="text-gray-500 text-sm">
               Don't have an account?{" "}
-              <Link href="/signup" className="text-white font-medium hover:text-blue-400 transition-colors underline decoration-blue-500/50 decoration-2 underline-offset-4">
+              <Link href="/signup" className="text-white font-bold hover:text-blue-400 transition-colors ml-1">
                 Sign up
               </Link>
             </p>
