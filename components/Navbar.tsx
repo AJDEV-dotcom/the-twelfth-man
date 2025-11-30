@@ -86,7 +86,7 @@ export default function Navbar() {
           <div className="hidden md:flex items-center space-x-8">
             <NavLink href="/shop/all">Shop</NavLink>
             <NavLink href="/shop/new-drops">New Drops</NavLink>
-            <NavLink href="/shop/collections">Collections</NavLink>
+            <NavLink href="/shop/collections">TIMELESS XI</NavLink>
           </div>
 
           {/* 3. RIGHT ACTIONS (Desktop) */}
@@ -176,7 +176,7 @@ export default function Navbar() {
             <div className="flex flex-col space-y-6">
               <MobileLink href="/shop/all" onClick={() => setIsMenuOpen(false)}>Shop</MobileLink>
               <MobileLink href="/shop/new-drops" onClick={() => setIsMenuOpen(false)}>New Drops</MobileLink>
-              <MobileLink href="/shop/collections" onClick={() => setIsMenuOpen(false)}>Collections</MobileLink>
+              <MobileLink href="/shop/collections" onClick={() => setIsMenuOpen(false)}>TIMELESS XI</MobileLink>
             </div>
             
             <div className="h-px bg-white/10 w-full" />
