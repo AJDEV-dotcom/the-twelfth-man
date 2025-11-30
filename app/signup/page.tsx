@@ -7,6 +7,9 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2, ShieldCheck } from "lucide-react";
 
+// Define the optimized image URL once
+const BG_IMAGE_URL = "https://images.unsplash.com/photo-1518091043644-c1d4457512c6?q=80&w=1200&auto=format&fit=crop";
+
 export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -15,6 +18,17 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const router = useRouter();
+
+  // Inject preload link tag for immediate background download
+  const HeadContent = () => (
+    <head>
+      <link 
+        rel="preload" 
+        as="image" 
+        href={BG_IMAGE_URL} 
+      />
+    </head>
+  );
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,8 +62,9 @@ export default function SignupPage() {
       <div className="absolute inset-0 z-0">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-900/20 rounded-full blur-[120px]" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple-900/20 rounded-full blur-[120px]" />
+        {/* FIXED: Using optimized URL for fast loading */}
         <img 
-          src="https://images.unsplash.com/photo-1518091043644-c1d4457512c6?q=80&w=2831&auto=format&fit=crop"
+          src={BG_IMAGE_URL}
           alt="Stadium texture"
           className="w-full h-full object-cover opacity-20 mix-blend-overlay"
         />
@@ -58,7 +73,7 @@ export default function SignupPage() {
       <div className="w-full max-w-md px-6 relative z-10">
         <AnimatePresence mode="wait">
           {success ? (
-             /* SUCCESS STATE */
+              /* SUCCESS STATE */
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -163,7 +178,7 @@ export default function SignupPage() {
                     {loading ? (
                       <>
                         <Loader2 className="w-5 h-5 animate-spin" />
-                        Creating Account...
+                        Creating account...
                       </>
                     ) : (
                       <>

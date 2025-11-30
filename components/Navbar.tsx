@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname } from "next/navigation"; // Pathname used for active link state
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { useState, useEffect } from "react";
-import { ShoppingBag, User, Menu, X, LogOut, ShieldCheck } from "lucide-react";
+import { ShoppingBag, User, Menu, X, LogOut, ShieldCheck, Clock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Nosifer } from "next/font/google";
 
@@ -33,7 +33,7 @@ interface NavLinkProps {
 export default function Navbar() {
   const cartContext = useCart();
   const authContext = useAuth();
-  const pathname = usePathname();
+  const pathname = usePathname(); // Initialize usePathname
   
   const cartCount = cartContext?.cartCount ?? 0;
   const user = authContext?.user;
@@ -107,10 +107,19 @@ export default function Navbar() {
                 {/* Dropdown Menu */}
                 <div className="absolute right-0 top-full pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
                   <div className="bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden w-64 p-2 ring-1 ring-black/5">
+                    
+                    {/* User Info Header */}
                     <div className="px-4 py-3 border-b border-white/10 mb-2">
                       <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Signed in as</p>
                       <p className="text-sm font-bold text-white truncate">{user?.email}</p>
                     </div>
+                    
+                    {/* --- NEW: ORDER HISTORY LINK --- */}
+                    <Link href="/account/orders" className="flex items-center space-x-3 px-4 py-3 text-sm font-bold text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all mb-2">
+                        <Clock className="w-4 h-4 text-blue-500" />
+                        <span>Order History</span>
+                    </Link>
+
                     {isAdmin && (
                       <Link href="/admin/dashboard" className="flex items-center space-x-3 px-4 py-3 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-all shadow-md shadow-blue-500/20 mb-2 group/item">
                         <ShieldCheck className="w-4 h-4" />
@@ -144,7 +153,7 @@ export default function Navbar() {
           {/* 4. MOBILE ACTIONS (Cart + Menu) */}
           <div className="flex items-center gap-4 md:hidden">
             
-            {/* MOBILE CART ICON - Updated z-index to keep visible on top of overlay */}
+            {/* MOBILE CART ICON */}
             <Link href="/cart" className="relative z-50 p-1">
               <ShoppingBag className="w-6 h-6 text-white" />
               {cartCount > 0 && (
@@ -192,6 +201,16 @@ export default function Navbar() {
                     </div>
                     <span>{user?.email}</span>
                   </div>
+                  
+                  {/* --- NEW: MOBILE ORDER HISTORY LINK --- */}
+                  <Link 
+                    href="/account/orders" 
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center space-x-2 text-gray-400 hover:text-white font-bold text-lg"
+                  >
+                    <Clock className="w-6 h-6 text-blue-500" />
+                    <span>Order History</span>
+                  </Link>
                   
                   {isAdmin && (
                     <Link 
@@ -242,13 +261,13 @@ function NavLink({ href, children }: NavLinkProps) {
   );
 }
 
-// Helper Component for Mobile Links
+// Helper Component for Mobile Links - REDUCED SIZE
 function MobileLink({ href, onClick, children, className = "" }: MobileLinkProps) {
   return (
     <Link 
       href={href} 
       onClick={onClick}
-      className={`text-xl font-bold uppercase tracking-tight text-white/90 hover:text-blue-500 transition-colors py-1.5 ${className}`}
+      className={`text-3xl font-black uppercase tracking-tighter text-white/90 hover:text-blue-500 transition-colors py-2 ${className}`}
     >
       {children}
     </Link>

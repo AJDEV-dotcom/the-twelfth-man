@@ -25,6 +25,7 @@ function QuickViewModal({ item, onClose }: { item: CartItem; onClose: () => void
         .single();
 
       if (!error && data) {
+        // Use image_urls if available, otherwise fallback
         if (data.image_urls && data.image_urls.length > 0) {
           setProductImages(data.image_urls);
         }
@@ -306,9 +307,9 @@ export default function CartPage() {
                 </div>
               </div>
 
-              <button className="w-full bg-white text-black py-4 rounded-xl font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all flex items-center justify-center gap-2 group shadow-lg shadow-white/5">
+              <Link href="/checkout" className="w-full bg-white text-black py-4 rounded-xl font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all flex items-center justify-center gap-2 group shadow-lg shadow-white/5">
                 Checkout <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </button>
+              </Link>
 
               <div className="mt-6 flex items-center justify-center gap-2 text-xs text-gray-500 font-medium uppercase tracking-wide">
                 <ShieldCheck className="w-4 h-4" />
@@ -329,9 +330,9 @@ export default function CartPage() {
                ${(cartTotal + shippingCost).toFixed(2)}
              </p>
           </div>
-          <button className="flex-1 bg-white text-black py-3.5 rounded-xl font-black uppercase tracking-widest text-sm hover:bg-gray-200 transition-colors shadow-lg">
+          <Link href="/checkout" className="flex-1 bg-white text-black py-3.5 rounded-xl font-black uppercase tracking-widest text-sm hover:bg-gray-200 transition-colors shadow-lg">
             Place Order
-          </button>
+          </Link>
         </div>
       </div>
 

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
-import { Plus, Edit, Trash2, Search, ArrowLeft, Loader2, Filter, AlertTriangle, CheckCircle } from "lucide-react";
+import { Plus, Edit, Trash2, Search, ArrowLeft, Loader2, Filter, AlertTriangle, CheckCircle, Package } from "lucide-react";
 import toast from "react-hot-toast";
 
 type Product = {
@@ -100,13 +100,12 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-black text-white pt-32 pb-12 px-4 selection:bg-blue-600 selection:text-white">
       {/* Background Noise */}
-      <div className="fixed inset-0 z-0 pointer-events-none opacity-[0.03] mix-blend-overlay" 
-           style={{ backgroundImage: 'url("https://grainy-gradients.vercel.app/noise.svg")' }}></div>
+      <div className="fixed inset-0 z-0 pointer-events-none opacity-[0.03] mix-blend-overlay" style={{ backgroundImage: 'url("https://grainy-gradients.vercel.app/noise.svg")' }}></div>
 
       <div className="max-w-6xl mx-auto relative z-10">
         
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
           <div>
             <Link href="/" className="flex items-center text-gray-400 hover:text-white transition-colors mb-2 text-sm uppercase tracking-widest font-bold">
               <ArrowLeft className="w-4 h-4 mr-2" /> Back to Home
@@ -115,12 +114,18 @@ export default function AdminDashboard() {
               Admin Dashboard
             </h1>
           </div>
-          
-          <Link 
-            href="/admin/add" 
-            className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold uppercase tracking-widest text-sm transition-all shadow-lg shadow-blue-900/20 hover:scale-105 active:scale-95"
-          >
-            <Plus className="w-5 h-5" /> Add New Kit
+        </div>
+
+        {/* --- NAVIGATION TABS --- */}
+        <div className="flex gap-4 border-b border-white/10 mb-8">
+          <Link href="/admin/dashboard" className="py-2 font-bold uppercase tracking-widest text-sm text-blue-500 border-b-2 border-blue-500">
+            Products ({products.length})
+          </Link>
+          <Link href="/admin/orders" className="py-2 font-bold uppercase tracking-widest text-sm text-gray-500 hover:text-white transition-colors">
+            Orders
+          </Link>
+          <Link href="/admin/add" className="ml-auto flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-bold uppercase tracking-widest text-xs transition-all shadow-lg shadow-blue-900/20 active:scale-95">
+            <Plus className="w-4 h-4" /> Add New Kit
           </Link>
         </div>
 
