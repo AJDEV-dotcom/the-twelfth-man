@@ -62,24 +62,22 @@ export default function Navbar() {
   return (
     <nav 
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out border-b
-        /* --- MOBILE DEFAULTS (SIMPLIFIED) --- */
-        /* Always Solid Black on Mobile to prevent flicker/lag */
-        bg-zinc-950 border-white/10 py-4 shadow-lg shadow-black/50
+        /* --- MOBILE DEFAULTS --- */
+        bg-zinc-950 border-white/10 py-3 md:py-4 shadow-lg shadow-black/50
 
         /* --- DESKTOP OVERRIDES (md:) --- */
-        /* If scrolled: Keep black/blur. If top: Transparent. */
         ${scrolled 
           ? "md:bg-black/80 md:backdrop-blur-xl md:shadow-lg md:py-4" 
           : "md:bg-transparent md:border-transparent md:shadow-none md:py-6"
         }
       `}
     >
-      <div className="max-w-7xl mx-auto px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center">
           
-          {/* 1. LOGO */}
-          <Link href="/" className="group relative z-50 flex items-center gap-2">
-            <span className={`${nosifer.className} text-xl md:text-2xl text-white tracking-wider`}>
+          {/* 1. LOGO - Resized for Mobile to prevent wrapping */}
+          <Link href="/" className="group relative z-50 flex items-center gap-2 shrink-0">
+            <span className={`${nosifer.className} text-lg sm:text-xl md:text-2xl text-white tracking-wider leading-none`}>
               The Twelfth Man<span className="text-blue-500">.</span>
             </span>
           </Link>
@@ -91,10 +89,8 @@ export default function Navbar() {
             <NavLink href="/shop/collections">Collections</NavLink>
           </div>
 
-          {/* 3. RIGHT ACTIONS */}
+          {/* 3. RIGHT ACTIONS (Desktop) */}
           <div className="hidden md:flex items-center space-x-6">
-            
-            {/* Account Dropdown */}
             {user ? (
               <div className="relative group">
                 <button className="flex items-center space-x-2 text-sm font-bold uppercase tracking-wide text-white hover:text-blue-400 transition-colors py-2">
@@ -106,36 +102,21 @@ export default function Navbar() {
                     )}
                   </span>
                 </button>
-                
                 {/* Dropdown Menu */}
                 <div className="absolute right-0 top-full pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
                   <div className="bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden w-64 p-2 ring-1 ring-black/5">
-                    
-                    {/* User Info Header */}
                     <div className="px-4 py-3 border-b border-white/10 mb-2">
                       <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Signed in as</p>
                       <p className="text-sm font-bold text-white truncate">{user?.email}</p>
                     </div>
-
-                    {/* ADMIN LINK (Updated to Dashboard) */}
                     {isAdmin && (
-                      <Link 
-                        href="/admin/dashboard" 
-                        className="flex items-center space-x-3 px-4 py-3 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-all shadow-md shadow-blue-500/20 mb-2 group/item"
-                      >
+                      <Link href="/admin/dashboard" className="flex items-center space-x-3 px-4 py-3 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-all shadow-md shadow-blue-500/20 mb-2 group/item">
                         <ShieldCheck className="w-4 h-4" />
                         <span>Admin Dashboard</span>
                       </Link>
                     )}
-
-                    <div className="px-4 py-2 text-[10px] text-gray-500 uppercase font-black tracking-widest">
-                      Menu
-                    </div>
-                    
-                    <button 
-                      onClick={() => signOut && signOut()} 
-                      className="w-full flex items-center space-x-2 px-4 py-2 text-sm font-bold text-red-400 hover:bg-red-500/10 rounded-lg transition-colors text-left"
-                    >
+                    <div className="px-4 py-2 text-[10px] text-gray-500 uppercase font-black tracking-widest">Menu</div>
+                    <button onClick={() => signOut && signOut()} className="w-full flex items-center space-x-2 px-4 py-2 text-sm font-bold text-red-400 hover:bg-red-500/10 rounded-lg transition-colors text-left">
                       <LogOut className="w-4 h-4" />
                       <span>Sign Out</span>
                     </button>
@@ -143,12 +124,9 @@ export default function Navbar() {
                 </div>
               </div>
             ) : (
-              <Link href="/login" className="text-sm font-bold uppercase tracking-wide text-white hover:text-blue-400 transition-colors">
-                Sign In
-              </Link>
+              <Link href="/login" className="text-sm font-bold uppercase tracking-wide text-white hover:text-blue-400 transition-colors">Sign In</Link>
             )}
 
-            {/* Cart Icon */}
             <Link href="/cart" className="relative group">
               <div className="p-2.5 bg-white/10 group-hover:bg-blue-600 rounded-full transition-all duration-300">
                 <ShoppingBag className="w-5 h-5 text-white transition-colors" />
@@ -161,13 +139,27 @@ export default function Navbar() {
             </Link>
           </div>
 
-          {/* 4. MOBILE MENU BUTTON */}
-          <button 
-            className="md:hidden relative z-50 p-2 text-white"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
+          {/* 4. MOBILE ACTIONS (Cart + Menu) */}
+          <div className="flex items-center gap-4 md:hidden">
+            
+            {/* MOBILE CART ICON - Updated z-index to keep visible on top of overlay */}
+            <Link href="/cart" className="relative z-50 p-1">
+              <ShoppingBag className="w-6 h-6 text-white" />
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center border border-black">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
+
+            {/* Hamburger Menu Button */}
+            <button 
+              className="relative z-50 p-1 text-white"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              {isMenuOpen ? <X className="w-7 h-7" /> : <Menu className="w-7 h-7" />}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -179,7 +171,6 @@ export default function Navbar() {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            // Solid background to prevent lag/flicker
             className="fixed inset-0 bg-zinc-950 z-40 md:hidden pt-28 px-6 flex flex-col space-y-8 border-l border-white/10"
           >
             <div className="flex flex-col space-y-6">
@@ -194,11 +185,12 @@ export default function Navbar() {
               {user ? (
                 <>
                   <div className="flex items-center space-x-3 text-gray-400 text-sm font-medium">
-                    <User className="w-5 h-5" />
+                    <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+                      <User className="w-4 h-4 text-white" />
+                    </div>
                     <span>{user?.email}</span>
                   </div>
                   
-                  {/* ADMIN LINK MOBILE (Updated) */}
                   {isAdmin && (
                     <Link 
                       href="/admin/dashboard" 
@@ -241,13 +233,13 @@ function NavLink({ href, children }: NavLinkProps) {
   );
 }
 
-// Helper Component for Mobile Links
+// Helper Component for Mobile Links - REDUCED SIZE
 function MobileLink({ href, onClick, children, className = "" }: MobileLinkProps) {
   return (
     <Link 
       href={href} 
       onClick={onClick}
-      className={`text-4xl font-black uppercase tracking-tighter text-white/80 hover:text-blue-500 transition-colors ${className}`}
+      className={`text-3xl font-black uppercase tracking-tighter text-white/90 hover:text-blue-500 transition-colors py-2 ${className}`}
     >
       {children}
     </Link>

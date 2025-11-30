@@ -6,39 +6,50 @@ export default function ToastProvider() {
   return (
     <Toaster
       position="bottom-right"
+      reverseOrder={false}
       toastOptions={{
-        // Define default styles
-        style: {
-          background: "#09090b", // zinc-950
-          color: "#fff",
-          border: "1px solid rgba(255, 255, 255, 0.1)",
-          borderRadius: "0.75rem", // rounded-xl
-          boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)", // shadow-lg
-          padding: "16px",
-          fontSize: "14px",
-          fontWeight: "bold",
-          textTransform: "uppercase",
-          letterSpacing: "0.05em", // tracking-wider
-        },
-        // Default options for specific types
+        // --- DEFAULT STYLES (Applies to all) ---
+        className: '!bg-zinc-950/90 !backdrop-blur-xl !border !border-white/10 !text-white !rounded-xl !shadow-2xl !font-bold !uppercase !tracking-wider !text-xs !py-4 !px-6',
+        
+        // --- SUCCESS TOAST (Goal Scored Vibe) ---
         success: {
           iconTheme: {
-            primary: "#3b82f6", // blue-500
-            secondary: "#fff",
+            primary: '#22c55e', // Green-500
+            secondary: 'black',
           },
           style: {
-            border: "1px solid rgba(59, 130, 246, 0.5)", // blue-500/50
+            borderLeft: '4px solid #22c55e', // Green Accent Bar
+            background: 'linear-gradient(to right, rgba(34, 197, 94, 0.05), rgba(9, 9, 11, 0.9))',
           },
         },
+
+        // --- ERROR TOAST (Red Card Vibe) ---
         error: {
           iconTheme: {
-            primary: "#ef4444", // red-500
-            secondary: "#fff",
+            primary: '#ef4444', // Red-500
+            secondary: 'white',
           },
           style: {
-            border: "1px solid rgba(239, 68, 68, 0.5)", // red-500/50
+            borderLeft: '4px solid #ef4444', // Red Accent Bar
+            background: 'linear-gradient(to right, rgba(239, 68, 68, 0.05), rgba(9, 9, 11, 0.9))',
           },
         },
+
+        // --- LOADING TOAST (Transfer Processing Vibe) ---
+        loading: {
+          iconTheme: {
+            primary: '#3b82f6', // Blue-500
+            secondary: 'transparent',
+          },
+          style: {
+            borderLeft: '4px solid #3b82f6', // Blue Accent Bar
+            background: 'linear-gradient(to right, rgba(59, 130, 246, 0.05), rgba(9, 9, 11, 0.9))',
+            color: '#9ca3af', // Gray text for "Loading..."
+          },
+        },
+        
+        // Animation Duration
+        duration: 4000,
       }}
     />
   );

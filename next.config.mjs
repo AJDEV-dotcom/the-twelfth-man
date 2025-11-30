@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
+    // 1. Prefer AVIF, fall back to WebP
+    formats: ['image/avif', 'image/webp'],
+    
+    // 2. Allow external images
     remotePatterns: [
       {
         protocol: 'https',
@@ -10,7 +14,7 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: '**.supabase.co', // Allow all Supabase storage buckets
+        hostname: '**.supabase.co',
         port: '',
         pathname: '/**',
       },

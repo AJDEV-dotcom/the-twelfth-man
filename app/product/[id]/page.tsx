@@ -5,9 +5,10 @@ import { supabase } from "@/lib/supabase";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ShoppingBag, Truck, ShieldCheck, Star, Minus, Plus, ChevronDown, CreditCard, RefreshCw, Ruler, Maximize2, X, ZoomIn, ZoomOut } from "lucide-react";
+import { ArrowLeft, ShoppingBag, Truck, ShieldCheck, Star, Minus, Plus, ChevronDown, CreditCard, RefreshCw, Ruler, Maximize2, X, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, Scan } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import Lenis from "lenis";
+import toast from "react-hot-toast"; // Import Toast
 
 // --- TYPES ---
 type Product = {
@@ -19,6 +20,41 @@ type Product = {
   category: string;
   description: string;
   subcategory?: string;
+  size_type?: string; 
+};
+
+// --- SIZE CONFIGURATION ---
+const SIZE_CONFIG: Record<string, string[]> = {
+  apparel: ["XS", "S", "M", "L", "XL", "XXL"],
+  footwear: ["US 6", "US 7", "US 8", "US 9", "US 10", "US 11"],
+  gloves: ["Size 7", "Size 8", "Size 9", "Size 10", "Size 11"],
+  balls: ["Size 4", "Size 5"],
+  equipment: ["One Size"],
+};
+
+// --- SIZE CHARTS DATA ---
+const SIZE_CHARTS: Record<string, { label: string; value: string }[]> = {
+  apparel: [
+    { label: "S", value: "Chest: 36-38\"" },
+    { label: "M", value: "Chest: 38-40\"" },
+    { label: "L", value: "Chest: 40-42\"" },
+    { label: "XL", value: "Chest: 42-44\"" },
+  ],
+  footwear: [
+    { label: "US 8", value: "EU 41 / UK 7" },
+    { label: "US 9", value: "EU 42.5 / UK 8" },
+    { label: "US 10", value: "EU 44 / UK 9" },
+    { label: "US 11", value: "EU 45 / UK 10" },
+  ],
+  gloves: [
+    { label: "Size 8", value: "Hand Width: 80-85mm" },
+    { label: "Size 9", value: "Hand Width: 85-90mm" },
+    { label: "Size 10", value: "Hand Width: 90-95mm" },
+  ],
+  balls: [
+    { label: "Size 5", value: "Standard Match Ball (Ages 12+)" },
+    { label: "Size 4", value: "Youth Training (Ages 8-12)" },
+  ],
 };
 
 // --- ACCORDION COMPONENT ---
@@ -63,20 +99,18 @@ export default function ProductPage() {
   
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedSize, setSelectedSize] = useState<string | null>("M");
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
 
-  // Full Screen & Zoom State
-  const [fullScreenImage, setFullScreenImage] = useState<string | null>(null);
+  // UI States
+  const [fullScreenIndex, setFullScreenIndex] = useState<number | null>(null);
   const [zoomLevel, setZoomLevel] = useState(1);
+  const [showSizeChart, setShowSizeChart] = useState(false); 
 
   const lenisRef = useRef<Lenis | null>(null);
 
-  // Standard sizes
-  const sizes = ["XS", "S", "M", "L", "XL", "XXL"];
-
-  // --- SMOOTH SCROLL SETUP (Lenis) ---
+  // --- SMOOTH SCROLL SETUP ---
   useEffect(() => {
     const lenis = new Lenis({
       duration: 1.2,
@@ -99,6 +133,7 @@ export default function ProductPage() {
     };
   }, []);
 
+  // --- FETCH PRODUCT ---
   useEffect(() => {
     async function fetchProduct() {
       if (!id) return;
@@ -113,6 +148,8 @@ export default function ProductPage() {
         console.error("Error fetching product:", error);
       } else {
         setProduct(data);
+        const type = determineSizeType(data.category, data.subcategory);
+        if (type === 'equipment') setSelectedSize("One Size");
       }
       setLoading(false);
     }
@@ -120,8 +157,45 @@ export default function ProductPage() {
     fetchProduct();
   }, [id]);
 
+  // --- KEYBOARD NAVIGATION FOR GALLERY ---
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (fullScreenIndex === null) return;
+      if (e.key === "ArrowRight") handleNavigate(1);
+      if (e.key === "ArrowLeft") handleNavigate(-1);
+      if (e.key === "Escape") closeFullScreen();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [fullScreenIndex]);
+
+  const determineSizeType = (category: string, subcategory?: string) => {
+    const cat = category.toLowerCase();
+    const sub = subcategory?.toLowerCase() || "";
+    
+    if (cat === "boots") return "footwear";
+    if (cat === "goalkeeper") return "gloves";
+    if (cat === "footballs") return "balls";
+    if (sub.includes("sock")) return "footwear";
+    if (sub.includes("shin") || sub.includes("guard")) return "apparel";
+    if (cat === "training gear") return "equipment"; 
+    if (cat === "accessories") return "equipment";
+    if (cat.includes("boot") || cat.includes("shoe")) return "footwear";
+    if (cat.includes("glove")) return "gloves";
+    if (cat.includes("ball")) return "balls";
+    
+    return "apparel";
+  };
+
   const handleAddToCart = () => {
     if (!product) return;
+    
+    // Check Size
+    if (!selectedSize) {
+      toast.error("Please select a size first");
+      return;
+    }
+
     setIsAdding(true);
     
     setTimeout(() => {
@@ -134,23 +208,40 @@ export default function ProductPage() {
       }); 
       
       setIsAdding(false);
-      alert("Added to cart!");
+      
+      // Custom Success Toast with Icon
+      toast.success("Added to your locker!", {
+        icon: <ShoppingBag className="w-5 h-5 text-green-500" />,
+        duration: 3000,
+      });
     }, 600);
   };
 
+  // --- IMAGE LOGIC ---
+  const images = (product?.image_urls && product.image_urls.length > 0)
+    ? product.image_urls 
+    : (product?.image_url ? [product.image_url] : ["https://via.placeholder.com/600"]);
+
   // --- FULL SCREEN HANDLERS ---
-  const openFullScreen = (img: string) => {
-    setFullScreenImage(img);
+  const openFullScreen = (index: number) => {
+    setFullScreenIndex(index);
     setZoomLevel(1);
     if (lenisRef.current) lenisRef.current.stop();
     if (typeof document !== 'undefined') document.body.style.overflow = 'hidden';
   };
 
   const closeFullScreen = () => {
-    setFullScreenImage(null);
+    setFullScreenIndex(null);
     setZoomLevel(1);
     if (lenisRef.current) lenisRef.current.start();
     if (typeof document !== 'undefined') document.body.style.overflow = '';
+  };
+
+  const handleNavigate = (direction: number) => {
+    if (fullScreenIndex === null) return;
+    setZoomLevel(1); // Reset zoom on slide
+    const newIndex = (fullScreenIndex + direction + images.length) % images.length;
+    setFullScreenIndex(newIndex);
   };
 
   const handleZoom = (delta: number) => {
@@ -159,11 +250,6 @@ export default function ProductPage() {
       return Math.max(1, Math.min(4, newZoom));
     });
   };
-
-  // --- SMART IMAGE LOGIC ---
-  const images = (product?.image_urls && product.image_urls.length > 0)
-    ? product.image_urls 
-    : (product?.image_url ? [product.image_url] : ["https://via.placeholder.com/600"]);
 
   if (loading) {
     return (
@@ -176,11 +262,10 @@ export default function ProductPage() {
     );
   }
 
-  if (!product) return (
-    <div className="min-h-screen bg-black flex items-center justify-center text-white">
-      <h1 className="text-2xl font-bold">Product Not Found</h1>
-    </div>
-  );
+  if (!product) return null;
+
+  const sizeType = determineSizeType(product.category, product.subcategory);
+  const currentSizes = SIZE_CONFIG[sizeType];
 
   return (
     <div className="min-h-screen bg-black text-white selection:bg-blue-600 selection:text-white pt-28 pb-20">
@@ -189,40 +274,105 @@ export default function ProductPage() {
       <div className="fixed inset-0 z-0 pointer-events-none opacity-[0.03] mix-blend-overlay" 
            style={{ backgroundImage: 'url("https://grainy-gradients.vercel.app/noise.svg")' }}></div>
 
-      {/* --- FULL SCREEN IMAGE MODAL --- */}
+      {/* --- SIZE CHART MODAL --- */}
       <AnimatePresence>
-        {fullScreenImage && (
+        {showSizeChart && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md flex items-center justify-center overflow-hidden"
+            className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+            onClick={() => setShowSizeChart(false)}
           >
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-zinc-900 border border-white/10 rounded-2xl p-8 max-w-md w-full shadow-2xl relative"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button 
+                onClick={() => setShowSizeChart(false)}
+                className="absolute top-4 right-4 text-gray-400 hover:text-white"
+              >
+                <X className="w-6 h-6" />
+              </button>
+              <h3 className="text-xl font-black uppercase tracking-wider mb-6 text-white">
+                Size Guide ({sizeType.toUpperCase()})
+              </h3>
+              <div className="space-y-3">
+                {SIZE_CHARTS[sizeType]?.map((item, i) => (
+                  <div key={i} className="flex justify-between items-center border-b border-white/5 pb-2">
+                    <span className="font-bold text-white">{item.label}</span>
+                    <span className="text-gray-400 text-sm">{item.value}</span>
+                  </div>
+                )) || <p className="text-gray-400">No specific chart for this item.</p>}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* --- FULL SCREEN IMAGE MODAL --- */}
+      <AnimatePresence>
+        {fullScreenIndex !== null && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center overflow-hidden"
+          >
+            {/* Close Button */}
             <button 
               onClick={closeFullScreen}
-              className="absolute top-6 right-6 z-50 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
+              className="absolute top-6 right-6 z-50 p-3 bg-white/5 hover:bg-white/20 rounded-full text-white transition-colors backdrop-blur-md"
             >
               <X className="w-6 h-6" />
             </button>
 
+            {/* Navigation Arrows (Hidden on Mobile) */}
+            {images.length > 1 && (
+              <>
+                <button 
+                  onClick={() => handleNavigate(-1)}
+                  className="hidden md:block absolute left-4 top-1/2 -translate-y-1/2 z-50 p-3 bg-white/5 hover:bg-white/20 rounded-full text-white transition-colors backdrop-blur-md"
+                >
+                  <ChevronLeft className="w-8 h-8" />
+                </button>
+                <button 
+                  onClick={() => handleNavigate(1)}
+                  className="hidden md:block absolute right-4 top-1/2 -translate-y-1/2 z-50 p-3 bg-white/5 hover:bg-white/20 rounded-full text-white transition-colors backdrop-blur-md"
+                >
+                  <ChevronRight className="w-8 h-8" />
+                </button>
+              </>
+            )}
+
+            {/* Image Viewer */}
             <div className="relative w-full h-full flex items-center justify-center cursor-grab active:cursor-grabbing">
-              <motion.img
-                src={fullScreenImage}
-                alt="Full Screen View"
-                className="max-h-screen max-w-full object-contain"
-                animate={{ scale: zoomLevel }}
-                drag={zoomLevel > 1}
-                dragConstraints={{ left: -1000, right: 1000, top: -1000, bottom: 1000 }}
-                dragElastic={0.1}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              />
+              <AnimatePresence mode="wait">
+                <motion.img
+                  key={fullScreenIndex}
+                  src={images[fullScreenIndex]}
+                  alt="Full Screen View"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: zoomLevel }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                  className="max-h-screen max-w-full object-contain"
+                  drag={zoomLevel > 1}
+                  dragConstraints={{ left: -1000, right: 1000, top: -1000, bottom: 1000 }}
+                  dragElastic={0.1}
+                />
+              </AnimatePresence>
             </div>
 
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 bg-zinc-900/90 border border-white/10 px-6 py-3 rounded-full shadow-2xl backdrop-blur-lg">
+            {/* Zoom Controls */}
+            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-6 bg-zinc-900/90 border border-white/10 px-8 py-4 rounded-full shadow-2xl backdrop-blur-lg">
               <button onClick={() => handleZoom(-0.5)} className="text-gray-400 hover:text-white transition-colors">
                 <ZoomOut className="w-5 h-5" />
               </button>
-              <span className="text-sm font-bold w-12 text-center select-none">{Math.round(zoomLevel * 100)}%</span>
+              <span className="text-sm font-bold w-12 text-center select-none text-white">{Math.round(zoomLevel * 100)}%</span>
               <button onClick={() => handleZoom(0.5)} className="text-gray-400 hover:text-white transition-colors">
                 <ZoomIn className="w-5 h-5" />
               </button>
@@ -251,9 +401,7 @@ export default function ProductPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-start">
           
-          {/* --- LEFT: GALLERY --- 
-              Mobile: Horizontal Scroll / Desktop: Vertical Stack
-          */}
+          {/* --- LEFT: GALLERY --- */}
           <div className="lg:col-span-7 flex flex-row lg:flex-col gap-2 lg:gap-4 overflow-x-auto lg:overflow-visible snap-x snap-mandatory scrollbar-hide -mx-6 px-6 lg:mx-0 lg:px-0">
             {images.map((img, index) => (
               <motion.div 
@@ -271,23 +419,24 @@ export default function ProductPage() {
                     className="w-full h-full object-cover"
                   />
                   
-                  {/* EXPAND BUTTON (Desktop Only) */}
+                  {/* EXPAND BUTTON (Desktop) */}
                   <div className="absolute bottom-4 right-4 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden lg:block">
                     <button 
-                      onClick={() => openFullScreen(img)}
-                      className="bg-black/50 backdrop-blur-md p-3 rounded-full text-white hover:bg-blue-600 transition-colors shadow-lg border border-white/10"
+                      onClick={() => openFullScreen(index)}
+                      className="bg-black/40 backdrop-blur-md p-3 rounded-full text-white hover:bg-white hover:text-black transition-all shadow-lg border border-white/10"
+                      title="Expand View"
                     >
-                      <Maximize2 className="w-5 h-5" />
+                      <Scan className="w-5 h-5" />
                     </button>
                   </div>
 
-                  {/* EXPAND BUTTON (Mobile - Always visible but subtle) */}
+                  {/* EXPAND BUTTON (Mobile) */}
                   <div className="absolute top-4 right-4 z-20 lg:hidden">
                     <button 
-                      onClick={() => openFullScreen(img)}
-                      className="bg-black/30 backdrop-blur-md p-2 rounded-full text-white/80"
+                      onClick={() => openFullScreen(index)}
+                      className="bg-black/30 backdrop-blur-md p-2 rounded-full text-white/80 hover:bg-white/20 transition-colors"
                     >
-                      <Maximize2 className="w-4 h-4" />
+                      <Scan className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
@@ -303,7 +452,7 @@ export default function ProductPage() {
             ))}
           </div>
 
-          {/* --- RIGHT: DETAILS (5 Cols) - STICKY --- */}
+          {/* --- RIGHT: DETAILS --- */}
           <div className="lg:col-span-5 relative h-full">
             <div className="sticky top-32 h-fit">
               
@@ -339,16 +488,23 @@ export default function ProductPage() {
               {/* Selectors */}
               <div className="space-y-8 mb-8 border-t border-white/10 pt-8">
                 
-                {/* Size */}
+                {/* Size Selector */}
                 <div>
                   <div className="flex justify-between items-center mb-4">
                     <label className="text-xs font-bold uppercase tracking-widest text-gray-400">Size: <span className="text-white ml-2">{selectedSize}</span></label>
-                    <button className="flex items-center gap-1 text-xs font-bold uppercase tracking-widest text-white hover:text-blue-500 transition-colors">
-                      <Ruler className="w-3 h-3" /> Size Chart
-                    </button>
+                    {/* Size Chart Trigger */}
+                    {sizeType !== 'equipment' && (
+                      <button 
+                        onClick={() => setShowSizeChart(true)}
+                        className="flex items-center gap-1 text-xs font-bold uppercase tracking-widest text-white hover:text-blue-500 transition-colors"
+                      >
+                        <Ruler className="w-3 h-3" /> Size Chart
+                      </button>
+                    )}
                   </div>
+                  
                   <div className="flex flex-wrap gap-2">
-                    {sizes.map((size) => (
+                    {currentSizes?.map((size) => (
                       <button
                         key={size}
                         onClick={() => setSelectedSize(size)}
@@ -360,7 +516,7 @@ export default function ProductPage() {
                       >
                         {size}
                       </button>
-                    ))}
+                    )) || <p className="text-red-500">Sizes not loaded properly.</p>}
                   </div>
                 </div>
 
@@ -368,19 +524,9 @@ export default function ProductPage() {
                 <div>
                   <label className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3 block">Quantity</label>
                   <div className="flex items-center w-32 border border-zinc-800 h-12 bg-black">
-                    <button 
-                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      className="w-10 h-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-zinc-900 transition-colors"
-                    >
-                      <Minus className="w-3 h-3" />
-                    </button>
+                    <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-10 h-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-zinc-900"><Minus className="w-3 h-3" /></button>
                     <div className="flex-1 text-center font-bold text-sm">{quantity}</div>
-                    <button 
-                      onClick={() => setQuantity(quantity + 1)}
-                      className="w-10 h-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-zinc-900 transition-colors"
-                    >
-                      <Plus className="w-3 h-3" />
-                    </button>
+                    <button onClick={() => setQuantity(quantity + 1)} className="w-10 h-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-zinc-900"><Plus className="w-3 h-3" /></button>
                   </div>
                 </div>
               </div>
@@ -397,28 +543,19 @@ export default function ProductPage() {
                     </>
                   )}
                 </button>
-                <button 
-                  className="w-full py-4 bg-blue-600 text-white font-bold uppercase tracking-widest text-sm hover:bg-blue-700 transition-colors shadow-lg shadow-blue-900/20"
-                >
+                <button className="w-full py-4 bg-blue-600 text-white font-bold uppercase tracking-widest text-sm hover:bg-blue-700 transition-colors shadow-lg shadow-blue-900/20">
                   Buy It Now
                 </button>
               </div>
 
-              {/* Collapsible Info Sections */}
+              {/* Collapsible Info */}
               <div className="border-t border-white/10">
                 <Accordion title="Material & Care" defaultOpen={true}>
-                  <div className="space-y-2">
-                    <p><strong>Composition:</strong> 100% Recycled Polyester.</p>
-                    <p><strong>Technology:</strong> Moisture-wicking Dri-FIT fabric keeps you cool.</p>
-                    <p><strong>Care:</strong> Machine wash cold. Do not bleach. Tumble dry low.</p>
-                  </div>
+                  <p>Premium quality materials tailored for athletes.</p>
                 </Accordion>
-                
                 <Accordion title="Description">
-                  <p className="mb-4">{product.description || "Represent your colors with pride. This authentic jersey features the same technology worn by the pros on the pitch."}</p>
-                  <p>Designed for the ultimate fan, offering a comfortable fit for the stands or the street.</p>
+                  <p>{product.description}</p>
                 </Accordion>
-
                 <Accordion title="Returns & Shipping">
                   <div className="space-y-2">
                     <p className="flex items-center gap-2"><Truck className="w-4 h-4 text-blue-500" /> Free Shipping on orders over $150.</p>
