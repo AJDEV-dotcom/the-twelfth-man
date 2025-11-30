@@ -367,6 +367,28 @@ export default function NewDropsPage() {
               <h1 className="text-5xl sm:text-8xl md:text-9xl font-black uppercase tracking-tighter text-white leading-none mb-6">
                 Fresh <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600">Drops.</span>
               </h1>
+
+              {/* MOBILE FILTERS - Show only on mobile, below heading */}
+              <div className="lg:hidden">
+                <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-4 border-b border-white/10 pb-2">
+                  Filter Category
+                </p>
+                <div className="flex flex-row gap-2 overflow-x-auto pb-4 scrollbar-hide">
+                  {CATEGORIES.map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => setActiveCategory(cat)}
+                      className={`flex-shrink-0 px-4 py-3 rounded-lg text-xs font-bold uppercase tracking-widest transition-all duration-200 border ${
+                        activeCategory === cat 
+                          ? "bg-white text-black shadow-lg border-transparent" 
+                          : "text-gray-400 border-white/10"
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
 
             {/* CONTENT */}
@@ -499,26 +521,26 @@ export default function NewDropsPage() {
           </div>
 
           {/* --- RIGHT COLUMN: FILTERS (STICKY) --- */}
-          <div className="w-full lg:w-64 flex-shrink-0 lg:order-last">
+          <div className="w-full lg:w-64 flex-shrink-0 lg:order-last hidden lg:block">
             {/* Sticky Wrapper */}
             <div className="lg:sticky lg:top-32 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto">
               <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-4 border-b border-white/10 pb-2">
                 Filter Category
               </p>
               
-              <div className="flex flex-row lg:flex-col gap-2 overflow-x-auto lg:overflow-visible pb-4 lg:pb-0 scrollbar-hide">
+              <div className="flex flex-col gap-2">
                 {CATEGORIES.map((cat) => (
                   <button
                     key={cat}
                     onClick={() => setActiveCategory(cat)}
-                    className={`flex-shrink-0 lg:w-full text-left px-4 py-3 rounded-lg text-xs font-bold uppercase tracking-widest transition-all duration-200 flex items-center justify-between group border lg:border-transparent ${
+                    className={`w-full text-left px-4 py-3 rounded-lg text-xs font-bold uppercase tracking-widest transition-all duration-200 flex items-center justify-between group ${
                       activeCategory === cat 
-                        ? "bg-white text-black shadow-lg border-transparent" 
-                        : "text-gray-400 border-white/10 lg:hover:bg-white/5 lg:hover:text-white"
+                        ? "bg-white text-black shadow-lg" 
+                        : "text-gray-400 hover:bg-white/5 hover:text-white"
                     }`}
                   >
                     {cat}
-                    {activeCategory === cat && <ArrowRight className="w-3 h-3 hidden lg:block" />}
+                    {activeCategory === cat && <ArrowRight className="w-3 h-3" />}
                   </button>
                 ))}
               </div>

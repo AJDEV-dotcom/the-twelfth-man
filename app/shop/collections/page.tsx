@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
-import { Quote } from "lucide-react"; // Removed History import
+import { Quote } from "lucide-react"; 
 import { Nosifer, Playfair_Display } from "next/font/google";
 import Lenis from "lenis";
 import { supabase } from "@/lib/supabase";
@@ -107,7 +107,6 @@ export default function CollectionsPage() {
     function raf(time: number) { lenis.raf(time); requestAnimationFrame(raf); }
     requestAnimationFrame(raf);
 
-    // Simulate "Opening the Vault"
     setTimeout(() => setLoading(false), 2000);
 
     return () => lenis.destroy();
@@ -116,10 +115,14 @@ export default function CollectionsPage() {
   // --- FETCH RETRO PRODUCTS ---
   useEffect(() => {
     async function fetchRetro() {
+      // UPDATED QUERY: STRICT MODE
+      // Only fetches items where subcategory is explicitly "Retro Kits" or "Retro Balls"
+      // Removed the name check (name.ilike...) to prevent false positives
       const { data } = await supabase
         .from("products")
         .select("*")
-        .or('category.eq.Retro,name.ilike.%classic%,name.ilike.%retro%')
+        .or('subcategory.eq."Retro Kits",subcategory.eq."Retro Balls"')
+        .order('id', { ascending: false }) 
         .limit(12);
       
       if (data) setProducts(data);
@@ -214,7 +217,6 @@ export default function CollectionsPage() {
         <div className="max-w-7xl mx-auto px-4 md:px-6">
           
           <div className="text-center mb-12 md:mb-24">
-             {/* Removed History Icon */}
              <h2 className={`${nosifer.className} text-3xl md:text-6xl uppercase tracking-widest mb-4 md:mb-6`}>
                From The <span className="text-transparent bg-clip-text bg-gradient-to-b from-yellow-400 to-yellow-700">Vault</span>
              </h2>
@@ -225,7 +227,7 @@ export default function CollectionsPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-12 md:gap-y-24">
               {products.map((product, i) => (
                 <Link href={`/product/${product.id}`} key={product.id} className="group block max-w-sm mx-auto w-full">
-                  {/* Image Container */}
+                  {/* Image Container - Polaroid Style */}
                   <div className="relative aspect-[4/5] bg-white p-2 md:p-3 shadow-2xl transform transition-transform duration-500 md:group-hover:-translate-y-2 md:group-hover:rotate-1">
                     <div className="relative w-full h-full overflow-hidden bg-zinc-100">
                       <Image 

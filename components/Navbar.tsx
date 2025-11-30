@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { useState, useEffect } from "react";
@@ -32,6 +33,7 @@ interface NavLinkProps {
 export default function Navbar() {
   const cartContext = useCart();
   const authContext = useAuth();
+  const pathname = usePathname();
   
   const cartCount = cartContext?.cartCount ?? 0;
   const user = authContext?.user;
@@ -223,23 +225,30 @@ export default function Navbar() {
 
 // Helper Component for Desktop Links
 function NavLink({ href, children }: NavLinkProps) {
+  const pathname = usePathname();
+  const isActive = pathname?.startsWith(href) || false;
+  
   return (
     <Link href={href} className="relative group py-2">
-      <span className="text-sm font-bold uppercase tracking-widest text-gray-400 group-hover:text-white transition-colors duration-300">
+      <span className={`text-sm font-bold uppercase tracking-widest transition-colors duration-300 ${
+        isActive ? 'text-white' : 'text-gray-400 group-hover:text-white'
+      }`}>
         {children}
       </span>
-      <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-blue-500 transition-all duration-300 group-hover:w-full" />
+      <span className={`absolute bottom-0 left-0 h-[2px] bg-blue-500 transition-all duration-300 ${
+        isActive ? 'w-full' : 'w-0 group-hover:w-full'
+      }`} />
     </Link>
   );
 }
 
-// Helper Component for Mobile Links - REDUCED SIZE
+// Helper Component for Mobile Links
 function MobileLink({ href, onClick, children, className = "" }: MobileLinkProps) {
   return (
     <Link 
       href={href} 
       onClick={onClick}
-      className={`text-3xl font-black uppercase tracking-tighter text-white/90 hover:text-blue-500 transition-colors py-2 ${className}`}
+      className={`text-xl font-bold uppercase tracking-tight text-white/90 hover:text-blue-500 transition-colors py-1.5 ${className}`}
     >
       {children}
     </Link>

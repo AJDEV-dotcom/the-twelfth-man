@@ -50,12 +50,13 @@ function Preloader() {
       exit="exit"
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black text-white overflow-hidden"
     >
-      <div className="flex gap-2 md:gap-4 overflow-hidden relative px-4 flex-wrap justify-center">
+      {/* FIXED: Added flex-nowrap and adjusted font sizes for mobile single-line */}
+      <div className="flex flex-nowrap gap-2 md:gap-4 overflow-hidden relative px-4 justify-center">
         {words.map((word, i) => (
           <motion.span
             key={i}
             variants={item}
-            className="text-4xl md:text-8xl font-black tracking-tighter uppercase"
+            className="text-xl sm:text-4xl md:text-8xl font-black tracking-tighter uppercase whitespace-nowrap"
           >
             {word}
           </motion.span>
@@ -73,8 +74,19 @@ function Preloader() {
 
 export default function Home() {
   const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(false); // State to track mobile view
   const containerRef = useRef<HTMLDivElement>(null);
   const lenisRef = useRef<Lenis | null>(null);
+
+  // --- DETECT MOBILE (To disable parallax for performance) ---
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   // --- SMOOTH SCROLL SETUP (Lenis) ---
   useEffect(() => {
@@ -83,6 +95,7 @@ export default function Home() {
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       orientation: 'vertical',
       smoothWheel: true,
+      touchMultiplier: 2, // Improved touch responsiveness
     });
     
     lenisRef.current = lenis;
@@ -125,7 +138,6 @@ export default function Home() {
     offset: ["start start", "end end"],
   });
   
-  // Optimized transforms using will-change in CSS
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
   const textY = useTransform(scrollYProgress, [0, 0.5], ["0%", "100%"]);
 
@@ -146,8 +158,11 @@ export default function Home() {
         
         {/* --- HERO SECTION --- */}
         <section className="relative h-[100svh] flex items-center justify-center overflow-hidden bg-black">
-          {/* Background Image with Parallax */}
-          <motion.div style={{ y }} className="absolute inset-0 z-0 will-change-transform">
+          {/* Background Image with Parallax (Disabled on Mobile for smoothness) */}
+          <motion.div 
+            style={{ y: isMobile ? 0 : y }} 
+            className="absolute inset-0 z-0 will-change-transform"
+          >
             <div className="absolute inset-0 bg-black/40 z-10" /> 
             <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black z-10" />
             
@@ -164,7 +179,7 @@ export default function Home() {
 
           {/* Hero Content */}
           <motion.div 
-            style={{ y: textY }} 
+            style={{ y: isMobile ? 0 : textY }} 
             className="relative z-20 w-full max-w-[90rem] mx-auto px-6 will-change-transform"
           >
             <div className="flex flex-col items-start">
@@ -238,31 +253,27 @@ export default function Home() {
           </div>
 
           <div className="max-w-[90rem] mx-auto px-6 relative z-10">
-            
-            {/* HEADER - FIXED ALIGNMENT */}
-            {/* Changed items-end to items-start md:items-end to fix mobile alignment */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 md:mb-16 gap-8">
+            <div className="flex flex-col md:flex-row justify-between items-end mb-12 md:mb-16 gap-8">
               <div>
                 <motion.h2 
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  className="text-5xl md:text-8xl font-black text-white uppercase tracking-tighter leading-[0.8] mb-4 text-left"
+                  className="text-5xl md:text-8xl font-black text-white uppercase tracking-tighter leading-[0.8] mb-4"
                 >
                   Shop By <br/>
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-400 to-gray-600">Category</span>
                 </motion.h2>
               </div>
               <div className="mb-4">
-                <Link href="/shop/all" className="flex items-center gap-2 text-sm md:text-xl font-bold uppercase tracking-wide text-gray-400 hover:text-white transition-colors">
-                  View All Categories <ArrowUpRight className="w-5 h-5 md:w-6 md:h-6" />
+                <Link href="/shop/all" className="flex items-center gap-2 text-lg md:text-xl font-bold uppercase tracking-wide text-gray-400 hover:text-white transition-colors">
+                  View All Categories <ArrowUpRight className="w-6 h-6" />
                 </Link>
               </div>
             </div>
 
-            {/* CATEGORY GRID - MOBILE OPTIMIZED */}
-            {/* Changed from grid-cols-1 to grid-cols-2 on mobile for smaller cards */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
+            {/* UPDATED: Using Local WebP Images from Public Folder */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               <CategoryCard 
                 title="Footballs" 
                 image="/Football.webp" 
@@ -323,33 +334,28 @@ function CategoryCard({ title, image }: { title: string, image: string }) {
   const slug = title.replace(/ /g, "-");
 
   return (
-    // Reduced height for mobile: h-[200px] instead of h-[300px]
-    <Link href={`/shop/${slug}`} className="group relative h-[200px] md:h-[400px] overflow-hidden block rounded-xl md:rounded-2xl">
+    <Link href={`/shop/${slug}`} className="group relative h-[300px] md:h-[400px] overflow-hidden block rounded-2xl">
       <motion.div
+        whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        // Removed hover scale logic for mobile, kept only for desktop (md:)
-        className="absolute inset-0 will-change-transform transition-transform duration-500 ease-out md:group-hover:scale-105"
+        transition={{ duration: 0.3, ease: "easeOut" }} 
+        className="absolute inset-0 will-change-transform"
       >
         <Image 
           src={image} 
           alt={title} 
           fill 
-          // Mobile: Color (no filter). Desktop: Grayscale -> Color on Hover
-          className="object-cover md:filter md:grayscale md:group-hover:grayscale-0 transition-[filter] duration-300 ease-out"
-          sizes="(max-width: 768px) 50vw, 33vw"
+          className="object-cover filter grayscale group-hover:grayscale-0 transition-[filter] duration-300 ease-out"
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
-        {/* Mobile: Lighter overlay. Desktop: Standard behavior */}
-        <div className="absolute inset-0 bg-black/20 md:bg-black/50 md:group-hover:bg-black/20 transition-colors duration-500 ease-out" />
+        <div className="absolute inset-0 bg-black/50 group-hover:bg-black/20 transition-colors duration-300 ease-out" />
       </motion.div>
-      
-      <div className="absolute inset-0 flex items-center justify-center p-4">
-        {/* Smaller text for mobile */}
-        <h3 className="text-xl md:text-5xl font-black text-white uppercase tracking-tighter text-center md:group-hover:scale-110 transition-transform duration-300 ease-out z-10 drop-shadow-lg">
+      <div className="absolute inset-0 flex items-center justify-center p-6">
+        <h3 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tighter text-center group-hover:scale-110 transition-transform duration-300 ease-out z-10 drop-shadow-lg will-change-transform">
           {title}
         </h3>
       </div>
-      
-      <div className="absolute inset-0 border-2 border-white/0 md:group-hover:border-white/20 transition-colors duration-300 ease-out rounded-xl md:rounded-2xl pointer-events-none" />
+      <div className="absolute inset-0 border-2 border-white/0 group-hover:border-white/20 transition-colors duration-300 ease-out rounded-2xl pointer-events-none" />
     </Link>
   );
 }
