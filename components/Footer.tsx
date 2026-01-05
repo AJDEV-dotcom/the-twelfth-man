@@ -88,9 +88,13 @@ export default function Footer() {
                 <input 
                   type="email" 
                   placeholder="Enter your email" 
+                  suppressHydrationWarning
                   className="bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-all w-full"
                 />
-                <button className="bg-white text-black hover:bg-blue-600 hover:text-white px-4 py-3 rounded-xl text-sm font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 w-full group">
+                <button 
+                  suppressHydrationWarning
+                  className="bg-white text-black hover:bg-blue-600 hover:text-white px-4 py-3 rounded-xl text-sm font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 w-full group"
+                >
                   Subscribe <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </button>
               </form>

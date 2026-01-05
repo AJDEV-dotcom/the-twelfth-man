@@ -62,21 +62,34 @@ export default function CheckoutPage() {
   const handleOrderSubmission = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
+    // 1. Check Auth Immediately
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+
+    // If no user is found, redirect to login instead of failing silently or throwing DB errors
+    if (!authUser) {
+      toast.error("Please sign in or sign up to complete your order.");
+      router.push("/login");
+      setLoading(false); // Stop loading since we are redirecting
+      return;
+    }
+
+    // 2. Start Payment Process (Only if authenticated)
     const loadingToastId = toast.loading("Processing Mock Payment...");
 
-    // 1. Prepare Order Header Data
-    const orderHeader = {
-      user_id: user?.id,
-      order_total: cartTotal,
-      shipping_cost: shippingCost,
-      total_amount: totalAmount,
-      status: 'Processing',
-      payment_method: 'Mock Payment',
-      ...shippingData,
-    };
-
     try {
-      // 2. Insert into orders table
+      // 3. Prepare Order Header Data
+      const orderHeader = {
+        user_id: authUser.id, // We are now guaranteed to have this
+        order_total: cartTotal,
+        shipping_cost: shippingCost,
+        total_amount: totalAmount,
+        status: 'Processing',
+        payment_method: 'Mock Payment',
+        ...shippingData,
+      };
+
+      // 4. Insert into orders table
       const { data: orderResult, error: orderError } = await supabase
         .from('orders')
         .insert(orderHeader)
@@ -87,7 +100,7 @@ export default function CheckoutPage() {
 
       const orderId = orderResult.id;
 
-      // 3. Prepare Order Details (Items)
+      // 5. Prepare Order Details (Items)
       const orderDetails = cartItems.map((item: CartItem) => ({
         order_id: orderId,
         product_id: item.id,
@@ -97,28 +110,26 @@ export default function CheckoutPage() {
         size: item.size,
       }));
 
-      // 4. Insert into order_details table
+      // 6. Insert into order_details table
       const { error: detailsError } = await supabase
         .from('order_details')
         .insert(orderDetails);
 
       if (detailsError) throw new Error(detailsError.message || "Failed to insert order details.");
 
-      // 5. Clear Cart (Both Local and DB)
+      // 7. Clear Cart (Both Local and DB)
       await clearCart(); 
 
       // --- SUCCESS: REDIRECT IS THE LAST THING THAT HAPPENS ---
       toast.success("Payment Successful! Order Confirmed.", { id: loadingToastId });
       
-      // FIXED: Use setTimeout to ensure execution stack is clear before router push,
-      // resolving the silent redirect failure/race condition.
+      // Use setTimeout to ensure execution stack is clear before router push
       setTimeout(() => {
         router.push(`/checkout/success?orderId=${orderId}`);
       }, 50); 
 
     } catch (error: any) {
-      console.error("Checkout Failed due to:", error); // Explicit logging
-      // If the error is the RLS violation, the error message will appear
+      console.error("Checkout Failed due to:", error);
       toast.error(error.message || "Checkout failed. Please try again.", { id: loadingToastId });
     } finally {
       setLoading(false);
@@ -214,16 +225,28 @@ export default function CheckoutPage() {
             {/* Item List */}
             <div className="max-h-60 overflow-y-auto space-y-4 pr-2 border-b border-white/10 pb-4 mb-4">
               {cartItems.map((item, index) => (
-                <div key={index} className="flex items-center gap-3">
+                <div key={index} className="flex items-start gap-3">
                   {/* Next/Image usage requires sizes prop */}
-                  <div className="relative w-12 h-16 flex-shrink-0">
-                      <Image src={item.image_url} alt={item.name} fill sizes="48px" className="rounded-md object-cover flex-shrink-0" />
+                  <div className="relative w-12 h-16 flex-shrink-0 bg-zinc-800 rounded-md overflow-hidden border border-white/5">
+                      <Image 
+                        src={item.image_url} 
+                        alt={item.name} 
+                        fill 
+                        sizes="48px" 
+                        className="object-cover" 
+                      />
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-bold truncate text-white">{item.name}</p>
+                  
+                  {/* Text Column - min-w-0 prevents horizontal scroll */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-white line-clamp-2 leading-tight mb-1">{item.name}</p>
                     <p className="text-xs text-gray-500 font-medium">Qty: {item.quantity} / Size: {item.size}</p>
                   </div>
-                  <p className="font-mono text-sm font-bold">${(item.price * item.quantity).toFixed(2)}</p>
+                  
+                  {/* Price Column - Fixed width alignment */}
+                  <div className="flex-shrink-0">
+                    <p className="font-mono text-sm font-bold text-white">${(item.price * item.quantity).toFixed(2)}</p>
+                  </div>
                 </div>
               ))}
             </div>

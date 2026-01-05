@@ -205,6 +205,7 @@ export default function ProductPage() {
         price: product.price,
         image_url: product.image_url, 
         quantity: quantity,
+        size: selectedSize, // FIXED: Now passing the selected size to the cart
       }); 
       
       setIsAdding(false);

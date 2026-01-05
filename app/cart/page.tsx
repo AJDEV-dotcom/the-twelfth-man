@@ -204,7 +204,7 @@ export default function CartPage() {
         <h1 className="text-3xl md:text-6xl font-black uppercase tracking-tighter mb-8 md:mb-12">
           Your <span className="text-blue-600">Locker</span> 
           <span className="text-base text-gray-500 font-normal ml-2">
-            ({cartItems.length}{" "}{cartItems.length === 1 ? 'Item' : 'Items'})
+            (  {cartItems.length}{" "}{cartItems.length === 1 ? 'Item' : 'Items'}  )
           </span>
         </h1>
 
@@ -213,9 +213,10 @@ export default function CartPage() {
           {/* LEFT: CART ITEMS LIST */}
           <div className="lg:col-span-8 space-y-4">
             <AnimatePresence mode="popLayout">
-              {cartItems.map((item) => (
+              {cartItems.map((item, index) => (
                 <motion.div 
-                  key={`${item.id}-${item.size}`}
+                  // UPDATED: Added index to key to prevent React errors if size is missing/undefined
+                  key={`${item.id}-${item.size || 'nosize'}-${index}`}
                   layout
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -227,25 +228,25 @@ export default function CartPage() {
                   <div className="relative w-24 h-32 md:w-32 md:h-40 flex-shrink-0 bg-zinc-800 rounded-lg overflow-hidden">
                     <Image 
                       src={item.image_url} 
-                      alt={item.name}
-                      fill
-                      className="object-cover"
+                      alt={item.name} 
+                      fill 
+                      className="object-cover" 
                       sizes="128px"
                     />
                   </div>
 
-                  {/* Details */}
-                  <div className="flex-1 flex flex-col justify-between py-1">
+                  {/* Details - Added min-w-0 for layout safety */}
+                  <div className="flex-1 flex flex-col justify-between py-1 min-w-0">
                     <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-bold text-sm md:text-xl leading-tight mb-1 line-clamp-2">{item.name}</h3>
+                      <div className="min-w-0 pr-2">
+                        <h3 className="font-bold text-sm md:text-xl leading-tight mb-1 line-clamp-2 break-words">{item.name}</h3>
                         <p className="text-xs md:text-sm text-gray-400 uppercase tracking-wide font-bold mb-2">
                           Size: <span className="text-white">{item.size || "N/A"}</span>
                         </p>
                       </div>
                       <button 
                         onClick={(e) => { e.stopPropagation(); removeFromCart(item.id, item.size); }}
-                        className="text-gray-500 hover:text-red-500 transition-colors p-2 -mt-2 -mr-2"
+                        className="text-gray-500 hover:text-red-500 transition-colors p-2 -mt-2 -mr-2 flex-shrink-0"
                       >
                         <Trash2 className="w-5 h-5" />
                       </button>
@@ -330,7 +331,7 @@ export default function CartPage() {
                ${(cartTotal + shippingCost).toFixed(2)}
              </p>
           </div>
-          <Link href="/checkout" className="flex-1 bg-white text-black py-3.5 rounded-xl font-black uppercase tracking-widest text-sm hover:bg-gray-200 transition-colors shadow-lg">
+          <Link href="/checkout" className="flex-1 bg-white text-black py-3.5 rounded-xl font-black uppercase tracking-widest text-sm hover:bg-gray-200 transition-colors shadow-lg flex items-center justify-center">
             Place Order
           </Link>
         </div>

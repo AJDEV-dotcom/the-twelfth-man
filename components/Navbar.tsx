@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation"; // Pathname used for active link state
+import { usePathname, useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
-import { useAuth } from "@/context/AuthContext";
+// Replaced AuthContext with direct client to ensure session detection
+import { createClient } from "@/utils/supabase/client";
 import { useState, useEffect } from "react";
 import { ShoppingBag, User, Menu, X, LogOut, ShieldCheck, Clock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -32,15 +33,43 @@ interface NavLinkProps {
 
 export default function Navbar() {
   const cartContext = useCart();
-  const authContext = useAuth();
-  const pathname = usePathname(); // Initialize usePathname
+  const pathname = usePathname();
+  const router = useRouter();
+  
+  // Local state for user to ensure immediate updates
+  const [user, setUser] = useState<any>(null);
   
   const cartCount = cartContext?.cartCount ?? 0;
-  const user = authContext?.user;
-  const signOut = authContext?.signOut;
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+
+  // Initialize Supabase client
+  const supabase = createClient();
+
+  // Fetch User on Mount & Listen for Changes
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+
+    checkUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        setUser(session?.user ?? null);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const signOut = async () => {
+      await supabase.auth.signOut();
+      setUser(null);
+      router.refresh();
+  };
 
   // Safely check for admin role
   const isAdmin = (user as any)?.app_metadata?.role === 'admin';
